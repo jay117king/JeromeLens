@@ -19,8 +19,20 @@ interface ClipDao {
     @Query("SELECT * FROM clips WHERE isFavorite = 1 ORDER BY timestamp DESC")
     fun getFavorites(): Flow<List<ClipEntity>>
 
+    @Query("SELECT * FROM clips WHERE category = :category ORDER BY timestamp DESC")
+    fun getClipsByCategory(category: String): Flow<List<ClipEntity>>
+
+    @Query("SELECT * FROM clips WHERE (category = :category OR (:category = 'Uncategorized' AND (category IS NULL OR category = ''))) AND text LIKE '%' || :query || '%' ORDER BY timestamp DESC")
+    fun searchClipsByCategory(category: String, query: String): Flow<List<ClipEntity>>
+
+    @Query("SELECT DISTINCT category FROM clips WHERE category IS NOT NULL AND category != '' ORDER BY category ASC")
+    fun getAllCategories(): Flow<List<String>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertClip(clip: ClipEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertClips(clips: List<ClipEntity>)
 
     @Update
     suspend fun updateClip(clip: ClipEntity)
