@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import com.jeromelens.app.databinding.ActivityMainBinding
 import com.jeromelens.app.service.FloatingBubbleService
 import com.jeromelens.app.service.ScreenshotDetectionService
+import com.jeromelens.app.util.Categories
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -34,6 +35,30 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Some permissions are needed for full functionality", Toast.LENGTH_LONG).show()
         }
         updateStatus()
+    }
+
+    /** Pick up to 10 images for batch OCR */
+    private val imagePickerLauncher = registerForActivityResult(
+        ActivityResultContracts.GetMultipleContents()
+    ) { uris: List<Uri> ->
+        if (uris.isEmpty()) return@registerForActivityResult
+
+        val limited = uris.take(Categories.MAX_BATCH_IMAGES)
+        if (uris.size > Categories.MAX_BATCH_IMAGES) {
+            Toast.makeText(
+                this,
+                "Selected ${uris.size} images. Only the first ${Categories.MAX_BATCH_IMAGES} will be processed.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+
+        val intent = Intent(this, BatchOcrActivity::class.java).apply {
+            putParcelableArrayListExtra(
+                BatchOcrActivity.EXTRA_URIS,
+                ArrayList(limited)
+            )
+        }
+        startActivity(intent)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,9 +84,13 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, HistoryActivity::class.java))
         }
 
-        // Floating bubble toggle (added in v2)
         binding.btnToggleBubble?.setOnClickListener {
             toggleBubble()
+        }
+
+        // Upload / pick images for OCR (max 10)
+        binding.btnUploadImages?.setOnClickListener {
+            imagePickerLauncher.launch("image/*")
         }
     }
 
@@ -132,7 +161,6 @@ class MainActivity : AppCompatActivity() {
             "❌ Overlay: Not granted – tap button below"
         }
 
-        // Update bubble button text if present
         binding.btnToggleBubble?.text = if (bubbleRunning) {
             "Stop Floating Bubble"
         } else {
