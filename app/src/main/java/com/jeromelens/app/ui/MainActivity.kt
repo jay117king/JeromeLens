@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
 import android.view.accessibility.AccessibilityManager
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -37,7 +38,6 @@ class MainActivity : AppCompatActivity() {
         updateStatus()
     }
 
-    /** Pick up to 10 images for batch OCR */
     private val imagePickerLauncher = registerForActivityResult(
         ActivityResultContracts.GetMultipleContents()
     ) { uris: List<Uri> ->
@@ -84,12 +84,11 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, HistoryActivity::class.java))
         }
 
-        binding.btnToggleBubble?.setOnClickListener {
+        binding.btnToggleBubble.setOnClickListener {
             toggleBubble()
         }
 
-        // Upload / pick images for OCR (max 10)
-        binding.btnUploadImages?.setOnClickListener {
+        binding.btnUploadImages.setOnClickListener {
             imagePickerLauncher.launch("image/*")
         }
     }
@@ -102,6 +101,7 @@ class MainActivity : AppCompatActivity() {
     private fun toggleBubble() {
         if (!Settings.canDrawOverlays(this)) {
             Toast.makeText(this, "Grant Overlay permission first", Toast.LENGTH_LONG).show()
+            binding.btnEnableOverlay.visibility = View.VISIBLE
             return
         }
         if (bubbleRunning) {
@@ -145,23 +145,26 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateStatus() {
         val am = getSystemService(ACCESSIBILITY_SERVICE) as AccessibilityManager
-        val enabled = am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_GENERIC)
-            .any { it.resolveInfo.serviceInfo.packageName == packageName }
+        val accessibilityOn = am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_GENERIC)
+            .any { it.resolveInfo.serviceInfo.packageName == packageName } ||
+            ScreenshotDetectionService.isRunning
 
-        binding.accessibilityStatus.text = if (enabled || ScreenshotDetectionService.isRunning) {
-            "✅ Accessibility: Enabled"
+        binding.accessibilityStatus.text = if (accessibilityOn) {
+            "Accessibility Enabled"
         } else {
-            "❌ Accessibility: Not enabled – tap button below"
+            "Accessibility Not enabled"
         }
+        binding.btnEnableAccessibility.visibility = if (accessibilityOn) View.GONE else View.VISIBLE
 
         val canDraw = Settings.canDrawOverlays(this)
         binding.overlayStatus.text = if (canDraw) {
-            "✅ Overlay: Granted"
+            "Overlay Granted"
         } else {
-            "❌ Overlay: Not granted – tap button below"
+            "Overlay Not granted"
         }
+        binding.btnEnableOverlay.visibility = if (canDraw) View.GONE else View.VISIBLE
 
-        binding.btnToggleBubble?.text = if (bubbleRunning) {
+        binding.btnToggleBubble.text = if (bubbleRunning) {
             "Stop Floating Bubble"
         } else {
             "Start Floating Bubble"
