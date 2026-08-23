@@ -15,4 +15,11 @@
     <string name="enable_overlay">Enable Overlay Permission</string>
     <string name="select_text">Tap text blocks to select</string>
     <string name="processing">Processing screenshot…</string>
+    <string name="start_bubble">Start Floating Bubble</string>
+    <string name="stop_bubble">Stop Floating Bubble</string>
+    <string name="open_link">Open Link</string>
+    <string name="send_email">Send Email</string>
+    <string name="call_number">Call</string>
+    <string name="copy_code">Copy Code</string>
+    <string name="smart_actions">Smart Actions</string>
 </resources>
