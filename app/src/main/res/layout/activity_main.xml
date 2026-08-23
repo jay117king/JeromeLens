@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true">
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     android:padding="24dp">
 
     <TextView
@@ -17,14 +22,14 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="48dp" />
+        android:layout_marginTop="24dp" />
 
     <TextView
         android:id="@+id/subtitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Screenshot → OCR → Smart Actions → History\nPrivacy-first. Fully on-device. v2.0"
-        android:textSize="16sp"
+        android:text="Screenshot or Upload → OCR → Smart Actions → Categories\nPrivacy-first. Fully on-device. v2.1"
+        android:textSize="15sp"
         android:gravity="center"
         android:layout_marginTop="12dp"
         app:layout_constraintTop_toBottomOf="@id/title"
@@ -35,7 +40,7 @@
         android:id="@+id/statusCard"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="24dp"
         app:cardElevation="4dp"
         app:cardCornerRadius="12dp"
         app:layout_constraintTop_toBottomOf="@id/subtitle"
@@ -87,12 +92,24 @@
     </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnUploadImages"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/upload_images"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/statusCard"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:icon="@android:drawable/ic_menu_gallery" />
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnToggleBubble"
+        style="@style/Widget.Material3.Button.OutlinedButton"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="@string/start_bubble"
-        android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@id/statusCard"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toBottomOf="@id/btnUploadImages"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:icon="@android:drawable/ic_menu_compass" />
@@ -112,12 +129,14 @@
     <TextView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Tip: Enable Accessibility + Overlay, then start the Floating Bubble. Take any screenshot — JeromeLens will extract text and offer smart actions (Open link, Call, Email, Copy code)."
+        android:text="Tip: Upload up to 10 images at once, run OCR, and assign them to a category (Work, Code, Receipts…). Or enable Accessibility + Overlay and take screenshots automatically."
         android:textSize="13sp"
         android:textColor="#666666"
         android:layout_marginTop="24dp"
+        android:layout_marginBottom="24dp"
         app:layout_constraintTop_toBottomOf="@id/btnHistory"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>
