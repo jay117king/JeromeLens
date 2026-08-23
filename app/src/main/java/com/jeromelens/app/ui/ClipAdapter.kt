@@ -1,6 +1,7 @@
 package com.jeromelens.app.ui
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -33,6 +34,14 @@ class ClipAdapter(
             binding.clipText.text = clip.text
             val sdf = SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault())
             binding.clipTimestamp.text = sdf.format(Date(clip.timestamp))
+
+            val category = clip.category?.takeIf { it.isNotBlank() }
+            if (category != null) {
+                binding.clipCategory?.visibility = View.VISIBLE
+                binding.clipCategory?.text = category
+            } else {
+                binding.clipCategory?.visibility = View.GONE
+            }
 
             binding.btnFavorite.setImageResource(
                 if (clip.isFavorite) android.R.drawable.btn_star_big_on
