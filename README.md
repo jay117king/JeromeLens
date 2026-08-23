@@ -1,14 +1,18 @@
-# JeromeLens v2.0
+# JeromeLens v2.1
 
-**Screenshot Text Extractor & Smart Clipboard Manager for Android**
+**Screenshot & Image Text Extractor + Smart Clipboard Manager for Android**
 
-Privacy-first, fully on-device OCR + smart actions.  
-Take a screenshot → text is extracted with ML Kit → interactive overlay lets you select & copy → **smart entity actions** (Open link / Call / Email / Copy code) → everything is saved in a searchable history.  
-Optional **Floating Bubble** for quick access.
+Privacy-first, fully on-device OCR + smart actions + categories.  
+
+- Take a screenshot **or upload up to 10 images** → text is extracted with ML Kit  
+- Interactive overlay + **smart entity actions** (Open link / Call / Email / Copy code)  
+- Assign clips to **categories** (Work, Code, Receipts, Notes…)  
+- Searchable history with category filters  
+- Optional **Floating Bubble** for quick access
 
 ---
 
-## What's new in v2.0
+## What's new in v2.1
 
 | Feature                        | Status     | Notes                                      |
 |--------------------------------|------------|--------------------------------------------|
@@ -17,13 +21,24 @@ Optional **Floating Bubble** for quick access.
 | Interactive text overlay       | ✅         | Tap to select blocks                       |
 | Copy to clipboard              | ✅         |                                            |
 | History + Search + Favorites   | ✅         | Room database                              |
-| Runtime permissions            | ✅         | Media + Notifications                      |
-| **Floating Bubble**            | ✅ **New** | Draggable overlay, tap = History           |
-| **Smart Entity Parsing**       | ✅ **New** | URL / Email / Phone / Code detection       |
-| **One-tap Actions**            | ✅ **New** | Open, Call, Email, Copy Code               |
-| GitHub Actions APK build       | ✅         |                                            |
-| Multi-language OCR             | ⏳ Later   | ML Kit already supports many languages     |
-| On-device LLM (summarize etc.) | ⏳ Later   | Phase 3                                    |
+| Floating Bubble                | ✅         | Draggable overlay                          |
+| Smart Entity Parsing           | ✅         | URL / Email / Phone / Code                 |
+| One-tap Actions                | ✅         | Open, Call, Email, Copy Code               |
+| **Upload images (max 10)**     | ✅ **New** | Gallery picker → batch OCR                 |
+| **Categories**                 | ✅ **New** | Work, Personal, Code, Receipts, Notes…     |
+| Category filter in History     | ✅ **New** | Chip filters                               |
+
+---
+
+## How to use Upload + Categories
+
+1. Open JeromeLens
+2. Tap **Upload Images (max 10)**
+3. Select 1–10 images from your gallery
+4. Wait for OCR to finish on each image
+5. Choose a **category** from the spinner (Work, Code, Receipts…)
+6. Tap **Save All** → clips appear in History under that category
+7. In History, use the category chips to filter
 
 ---
 
@@ -35,23 +50,18 @@ Optional **Floating Bubble** for quick access.
 4. Download the artifact named **JeromeLens-debug-apk**
 5. Extract the ZIP and install the `.apk`
 6. Allow “Install unknown apps” if asked
-7. Open **JeromeLens**
-8. Grant the permissions it asks for (Photos/Media + Notifications)
-9. Tap **Enable Accessibility Service** → turn JeromeLens on
-10. Tap **Enable Overlay Permission** → allow it
-11. (Optional) Tap **Start Floating Bubble**
-12. Take any screenshot → the overlay should appear with smart actions
-
-You can also manually trigger a new build: **Actions → Build Debug APK → Run workflow**
+7. Open **JeromeLens** and grant permissions
+8. Enable Accessibility + Overlay if you want automatic screenshot detection
+9. Use **Upload Images** anytime for manual OCR + categories
 
 ---
 
 ## Permissions required
 
-- **Accessibility Service** – to detect screenshots reliably
-- **Display over other apps** – for the text overlay + floating bubble
-- **Photos and videos / Media** – to read the screenshot file
-- **Notifications** (Android 13+) – for the foreground service
+- **Accessibility Service** – automatic screenshot detection
+- **Display over other apps** – overlay + floating bubble
+- **Photos and videos / Media** – read screenshots & gallery images
+- **Notifications** (Android 13+) – foreground service
 
 Everything runs **100% on-device**. No cloud, no tracking.
 
@@ -60,11 +70,9 @@ Everything runs **100% on-device**. No cloud, no tracking.
 ## Tech Stack
 
 - Kotlin + Coroutines + Flow
-- Hilt (Dependency Injection)
-- Room (local database)
-- Google ML Kit Text Recognition (on-device)
+- Hilt · Room · ML Kit Text Recognition
 - Material 3 + View Binding
-- SmartEntityParser (pure Kotlin regex + heuristics)
+- SmartEntityParser + Categories
 - GitHub Actions for automated APK builds
 
 ---
@@ -73,26 +81,13 @@ Everything runs **100% on-device**. No cloud, no tracking.
 
 ```
 app/src/main/java/com/jeromelens/app/
-├── data/          # Room entities, DAO, Repository, Hilt module
+├── data/          # Room + ClipRepository (categories, batch)
 ├── ocr/           # ML Kit OCR processor
-├── service/       # ScreenshotDetectionService + FloatingBubbleService
-├── ui/            # Activities, OverlayView, Adapters, ViewModels
-└── util/          # SmartEntityParser and helpers
+├── service/       # ScreenshotDetection + FloatingBubble
+├── ui/            # Main, Overlay, History, BatchOcr
+└── util/          # SmartEntityParser, Categories
 ```
 
 ---
 
-## Team / Development model
-
-This project is advanced with an OpenManus-inspired multi-agent mindset:
-
-- **Lenssmith** – OCR & detection core
-- **Overlay Architect** – UI & floating bubble
-- **Parser Agent** – Smart entity detection & actions
-- **Coordinator** – Roadmap & releases
-
-Contributions welcome via issues and PRs.
-
----
-
-Built as a complete privacy-first MVP and upgraded to v2.0 with floating bubble + smart actions. Enjoy!
+Built as a privacy-first OCR tool. Enjoy!
