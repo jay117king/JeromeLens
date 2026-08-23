@@ -2,50 +2,77 @@
 
 **Screenshot Text Extractor & Clipboard Manager for Android**
 
-Privacy-first, fully on-device OCR. Detect screenshots → extract text with ML Kit → interactive overlay to select/copy → searchable history.
+Privacy-first, fully on-device OCR. Take a screenshot → text is extracted with ML Kit → interactive overlay lets you select & copy → everything is saved in a searchable history.
 
-## Features (MVP)
+---
 
-- Screenshot detection via Accessibility Service + FileObserver
-- On-device OCR with Google ML Kit
-- Interactive overlay: tap text blocks to select & highlight
-- One-tap copy to clipboard
-- Persistent history with search (Room + SQLite)
-- Favorites & delete
-- Modern Material 3 UI
+## Current Status (MVP + Fixes)
 
-## How to install on your Android phone (no PC needed)
+| Feature                        | Status     | Notes                                      |
+|--------------------------------|------------|--------------------------------------------|
+| Screenshot detection           | ✅ Fixed   | MediaStore + FileObserver + debouncing     |
+| On-device OCR (ML Kit)          | ✅ Working | With image downsampling                    |
+| Interactive text overlay       | ✅ Working | Tap to select blocks                       |
+| Copy to clipboard              | ✅ Working |                                            |
+| History + Search + Favorites   | ✅ Working | Room database                              |
+| Runtime permissions            | ✅ Fixed   | Media + Notifications                      |
+| GitHub Actions APK build       | 🔄 Running | Latest fixes just pushed                   |
+| Floating bubble                | ⏳ Later   | Phase 2                                    |
+| Smart parsing (URL/email/code) | ⏳ Later   | Phase 2                                    |
+| AI actions / Translate         | ⏳ Later   | Phase 3                                    |
 
-1. Open this repository on your phone browser: https://github.com/jay117king/JeromeLens
+---
+
+## How to install on your Android phone (no PC)
+
+1. Open this repo on your phone: **https://github.com/jay117king/JeromeLens**
 2. Go to the **Actions** tab
-3. Select the latest **Build Debug APK** workflow run (or trigger a new one with "Run workflow")
-4. Download the artifact **JeromeLens-debug-apk**
-5. Extract the ZIP and install the `.apk` (enable "Install unknown apps" for your browser/files app)
-6. Open JeromeLens → Enable **Accessibility Service** and **Overlay** permission
-7. Take a screenshot → the overlay appears with selectable text!
+3. Find the latest **Build Debug APK** run that shows a green checkmark ✅
+4. Download the artifact named **JeromeLens-debug-apk**
+5. Extract the ZIP and install the `.apk`
+6. Allow “Install unknown apps” if asked
+7. Open **JeromeLens**
+8. Grant the permissions it asks for (Photos/Media + Notifications)
+9. Tap **Enable Accessibility Service** → turn JeromeLens on
+10. Tap **Enable Overlay Permission** → allow it
+11. Take any screenshot → the overlay should appear
 
-## Permissions
+You can also manually trigger a new build: **Actions → Build Debug APK → Run workflow**
 
-- Accessibility Service (detect screenshots)
-- Display over other apps (overlay)
-- Read media / storage (access screenshot files)
+---
 
-Everything runs **on-device**. No cloud, no tracking.
+## Permissions required
+
+- **Accessibility Service** – to detect screenshots reliably
+- **Display over other apps** – for the text overlay
+- **Photos and videos / Media** – to read the screenshot file
+- **Notifications** (Android 13+) – for the foreground service
+
+Everything runs **100% on-device**. No cloud, no tracking.
+
+---
 
 ## Tech Stack
 
 - Kotlin + Coroutines + Flow
-- Hilt DI
-- Room
-- ML Kit Text Recognition
-- Material 3
-- View Binding
-
-## Roadmap
-
-- Phase 2: Floating bubble, smart parsing (URLs, emails, code), categories
-- Phase 3: AI actions (summarize, translate), full-text search, export, sync
+- Hilt (Dependency Injection)
+- Room (local database)
+- Google ML Kit Text Recognition (on-device)
+- Material 3 + View Binding
+- GitHub Actions for automated APK builds
 
 ---
 
-Built as a complete MVP from the specification. Enjoy!
+## Project structure
+
+```
+app/src/main/java/com/jeromelens/app/
+├── data/          # Room entities, DAO, Repository, Hilt module
+├── ocr/           # ML Kit OCR processor
+├── service/       # ScreenshotDetectionService + FloatingBubbleService
+└── ui/            # Activities, OverlayView, Adapters, ViewModels
+```
+
+---
+
+Built and iteratively fixed as a complete MVP. Enjoy!

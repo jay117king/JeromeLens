@@ -34,7 +34,10 @@ data class ExtractedTextResult(
 @Singleton
 class OcrProcessor @Inject constructor() {
 
-    private val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+    // Lazy so we only create it when first needed
+    private val recognizer by lazy {
+        TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+    }
 
     suspend fun extractText(bitmap: Bitmap): ExtractedTextResult {
         val inputImage = InputImage.fromBitmap(bitmap, 0)
@@ -65,7 +68,12 @@ class OcrProcessor @Inject constructor() {
         )
     }
 
+    /** Call when the app is being destroyed if you want to free resources early */
     fun close() {
-        recognizer.close()
+        try {
+            recognizer.close()
+        } catch (_: Exception) {
+            // already closed or never created
+        }
     }
 }
