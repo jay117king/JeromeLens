@@ -7,7 +7,7 @@
     <string name="copied">Copied to clipboard!</string>
     <string name="history">History</string>
     <string name="search_hint">Search clips…</string>
-    <string name="no_clips">No clips yet. Take a screenshot to get started!</string>
+    <string name="no_clips">No clips yet. Take a screenshot or upload images to get started!</string>
     <string name="favorite">Favorite</string>
     <string name="delete">Delete</string>
     <string name="settings">Settings</string>
@@ -22,4 +22,7 @@
     <string name="call_number">Call</string>
     <string name="copy_code">Copy Code</string>
     <string name="smart_actions">Smart Actions</string>
+    <string name="upload_images">Upload Images (max 10)</string>
+    <string name="batch_ocr">Batch OCR</string>
+    <string name="all_categories">All</string>
 </resources>
