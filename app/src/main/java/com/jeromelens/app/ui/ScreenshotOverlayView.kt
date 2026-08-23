@@ -27,19 +27,24 @@ class ScreenshotOverlayView @JvmOverloads constructor(
     private val highlightPaint = Paint().apply {
         color = Color.parseColor("#4D2196F3")
         style = Paint.Style.FILL
+        isAntiAlias = true
     }
 
     private val borderPaint = Paint().apply {
         color = Color.parseColor("#2196F3")
         style = Paint.Style.STROKE
         strokeWidth = 4f
+        isAntiAlias = true
     }
 
     var onSelectionChanged: ((String) -> Unit)? = null
 
     fun setScreenshot(bmp: Bitmap) {
         bitmap = bmp
-        calculateScale()
+        // Recalculate immediately if we already have size, otherwise wait for onSizeChanged
+        if (width > 0 && height > 0) {
+            calculateScale()
+        }
         invalidate()
     }
 
@@ -53,10 +58,11 @@ class ScreenshotOverlayView @JvmOverloads constructor(
         val bmp = bitmap ?: return
         val viewW = width.toFloat()
         val viewH = height.toFloat()
-        if (viewW <= 0 || viewH <= 0) return
+        if (viewW <= 0f || viewH <= 0f) return
 
         val bmpW = bmp.width.toFloat()
         val bmpH = bmp.height.toFloat()
+        if (bmpW <= 0f || bmpH <= 0f) return
 
         val scale = min(viewW / bmpW, viewH / bmpH)
         scaleX = scale
@@ -68,11 +74,17 @@ class ScreenshotOverlayView @JvmOverloads constructor(
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         calculateScale()
+        invalidate()
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         val bmp = bitmap ?: return
+
+        // Re-ensure scale is correct (defensive)
+        if (scaleX == 1f && width > 0 && bmp.width != width) {
+            calculateScale()
+        }
 
         canvas.save()
         canvas.translate(offsetX, offsetY)
@@ -91,6 +103,7 @@ class ScreenshotOverlayView @JvmOverloads constructor(
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
+                // Convert view coordinates → bitmap coordinates
                 val x = ((event.x - offsetX) / scaleX).toInt()
                 val y = ((event.y - offsetY) / scaleY).toInt()
 
