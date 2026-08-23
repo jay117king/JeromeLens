@@ -3,17 +3,24 @@ package com.jeromelens.app.ui
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.button.MaterialButton
 import com.jeromelens.app.R
 import com.jeromelens.app.databinding.ActivityTextOverlayBinding
 import com.jeromelens.app.ocr.OcrProcessor
+import com.jeromelens.app.util.DetectedEntity
+import com.jeromelens.app.util.EntityType
+import com.jeromelens.app.util.SmartEntityParser
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -36,6 +43,7 @@ class TextOverlayActivity : AppCompatActivity() {
     private val viewModel: TextOverlayViewModel by viewModels()
 
     private var screenshotPath: String? = null
+    private var currentEntities: List<DetectedEntity> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,7 +73,6 @@ class TextOverlayActivity : AppCompatActivity() {
 
                 binding.overlayView.setScreenshot(bitmap)
 
-                // Force a layout pass so scale is correct before drawing highlights
                 binding.overlayView.post {
                     binding.overlayView.requestLayout()
                 }
@@ -84,16 +91,25 @@ class TextOverlayActivity : AppCompatActivity() {
                     binding.instructionText.text = getString(R.string.select_text)
                 }
 
+                // Smart entity detection on full text
+                currentEntities = SmartEntityParser.parse(result.fullText)
+                renderSmartActions(currentEntities)
+
                 binding.overlayView.onSelectionChanged = { selected ->
                     if (selected.isNotBlank()) {
                         binding.selectedPreview.visibility = View.VISIBLE
                         binding.selectedPreview.text = selected
+                        // Re-parse selection for more precise actions
+                        val selectionEntities = SmartEntityParser.parse(selected)
+                        if (selectionEntities.isNotEmpty()) {
+                            renderSmartActions(selectionEntities)
+                        }
                     } else {
                         binding.selectedPreview.visibility = View.GONE
+                        renderSmartActions(currentEntities)
                     }
                 }
 
-                // Auto-select when there are only a few blocks
                 if (result.textBlocks.size in 1..8) {
                     binding.overlayView.selectAll()
                 }
@@ -121,18 +137,85 @@ class TextOverlayActivity : AppCompatActivity() {
         }
     }
 
+    private fun renderSmartActions(entities: List<DetectedEntity>) {
+        // Find or create a container for action chips. For robustness we reuse bottomBar parent.
+        val container = binding.bottomBar.parent as? LinearLayout ?: return
+
+        // Remove previous dynamic action buttons (tagged)
+        val toRemove = mutableListOf<View>()
+        for (i in 0 until container.childCount) {
+            val child = container.getChildAt(i)
+            if (child.tag == "smart_action") toRemove.add(child)
+        }
+        toRemove.forEach { container.removeView(it) }
+
+        if (entities.isEmpty()) return
+
+        // Add up to 4 primary actions
+        entities.take(4).forEach { entity ->
+            val btn = MaterialButton(this, null, com.google.android.material.R.attr.materialButtonOutlinedStyle).apply {
+                text = when (entity.type) {
+                    EntityType.URL -> "Open: ${entity.value.take(28)}"
+                    EntityType.EMAIL -> "Email: ${entity.value}"
+                    EntityType.PHONE -> "Call: ${entity.value}"
+                    EntityType.CODE_BLOCK -> "Copy Code"
+                    else -> SmartEntityParser.primaryActionLabel(entity.type)
+                }
+                tag = "smart_action"
+                isAllCaps = false
+                setOnClickListener { performEntityAction(entity) }
+            }
+            val lp = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = 8
+            }
+            container.addView(btn, 0, lp) // insert near top of bottom area
+        }
+    }
+
+    private fun performEntityAction(entity: DetectedEntity) {
+        try {
+            when (entity.type) {
+                EntityType.URL -> {
+                    var url = entity.value
+                    if (!url.startsWith("http")) url = "https://$url"
+                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                }
+                EntityType.EMAIL -> {
+                    val intent = Intent(Intent.ACTION_SENDTO).apply {
+                        data = Uri.parse("mailto:${entity.value}")
+                    }
+                    startActivity(intent)
+                }
+                EntityType.PHONE -> {
+                    val intent = Intent(Intent.ACTION_DIAL).apply {
+                        data = Uri.parse("tel:${entity.value.filter { it.isDigit() || it == '+' }}")
+                    }
+                    startActivity(intent)
+                }
+                EntityType.CODE_BLOCK, EntityType.PLAIN, EntityType.ADDRESS_LIKE -> {
+                    copyToClipboard(entity.value)
+                    viewModel.saveClip(entity.value, screenshotPath)
+                    Toast.makeText(this, R.string.copied, Toast.LENGTH_SHORT).show()
+                }
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "Action failed: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     private fun decodeSampledBitmap(path: String): Bitmap? {
         return try {
-            // First decode with inJustDecodeBounds=true to check dimensions
             val options = BitmapFactory.Options().apply {
                 inJustDecodeBounds = true
             }
             BitmapFactory.decodeFile(path, options)
 
-            // Calculate inSampleSize
             options.inSampleSize = calculateInSampleSize(options, MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION)
             options.inJustDecodeBounds = false
-            options.inPreferredConfig = Bitmap.Config.RGB_565 // lower memory
+            options.inPreferredConfig = Bitmap.Config.RGB_565
 
             BitmapFactory.decodeFile(path, options)
         } catch (e: Exception) {
