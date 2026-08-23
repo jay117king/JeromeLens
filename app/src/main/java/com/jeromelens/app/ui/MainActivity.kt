@@ -14,6 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.jeromelens.app.databinding.ActivityMainBinding
+import com.jeromelens.app.service.FloatingBubbleService
 import com.jeromelens.app.service.ScreenshotDetectionService
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -21,15 +22,16 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private var bubbleRunning = false
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { results ->
         val allGranted = results.values.all { it }
         if (allGranted) {
-            Toast.makeText(this, "Storage permission granted", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Permissions granted", Toast.LENGTH_SHORT).show()
         } else {
-            Toast.makeText(this, "Storage permission is needed to read screenshots", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Some permissions are needed for full functionality", Toast.LENGTH_LONG).show()
         }
         updateStatus()
     }
@@ -39,7 +41,6 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Request necessary runtime permissions early
         requestNeededPermissions()
 
         binding.btnEnableAccessibility.setOnClickListener {
@@ -57,10 +58,32 @@ class MainActivity : AppCompatActivity() {
         binding.btnHistory.setOnClickListener {
             startActivity(Intent(this, HistoryActivity::class.java))
         }
+
+        // Floating bubble toggle (added in v2)
+        binding.btnToggleBubble?.setOnClickListener {
+            toggleBubble()
+        }
     }
 
     override fun onResume() {
         super.onResume()
+        updateStatus()
+    }
+
+    private fun toggleBubble() {
+        if (!Settings.canDrawOverlays(this)) {
+            Toast.makeText(this, "Grant Overlay permission first", Toast.LENGTH_LONG).show()
+            return
+        }
+        if (bubbleRunning) {
+            FloatingBubbleService.stop(this)
+            bubbleRunning = false
+            Toast.makeText(this, "Floating bubble stopped", Toast.LENGTH_SHORT).show()
+        } else {
+            FloatingBubbleService.start(this)
+            bubbleRunning = true
+            Toast.makeText(this, "Floating bubble started", Toast.LENGTH_SHORT).show()
+        }
         updateStatus()
     }
 
@@ -109,13 +132,11 @@ class MainActivity : AppCompatActivity() {
             "❌ Overlay: Not granted – tap button below"
         }
 
-        // Also show media permission status
-        val hasMedia = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED
+        // Update bubble button text if present
+        binding.btnToggleBubble?.text = if (bubbleRunning) {
+            "Stop Floating Bubble"
         } else {
-            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+            "Start Floating Bubble"
         }
-
-        // We can append or just rely on the two main statuses for now
     }
 }
