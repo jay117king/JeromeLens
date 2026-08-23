@@ -48,6 +48,12 @@
             android:parentActivityName=".ui.MainActivity"
             android:theme="@style/Theme.JeromeLens" />
 
+        <activity
+            android:name=".ui.BatchOcrActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity"
+            android:theme="@style/Theme.JeromeLens" />
+
         <service
             android:name=".service.ScreenshotDetectionService"
             android:exported="true"
